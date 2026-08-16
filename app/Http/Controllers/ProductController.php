@@ -37,8 +37,8 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->category_id) {
-            $product = Product::find($request->category_id);
+        if ($request->product_id) {
+        $product = Product::find($request->product_id);
             if(! $product){
                 abort(404);
             }
@@ -90,6 +90,7 @@ class ProductController extends Controller
             abort(404);
         }
         return response()->json([
+            'id'    => $product->id,
             'name'     => $product->name,
             'type'     => $product->category_id,
             'price'    => $product->price,

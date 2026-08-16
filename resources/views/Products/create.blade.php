@@ -29,8 +29,8 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <!-- hidden input to determine whether the request is create or update, value included-> update request -->
-                        <input type="hidden" name="category_id" id="category_id"> 
+                        <!-- hidden input to detect whether the request is create or update, value included-> update request -->
+                        <input type="hidden" name="product_id" id="product_id">
                         <div class="form-group mb-3">
                             <label for="name">Name</label>
                             <input type="text" class="form-control" name="name" id="name" placeholder="iPhone 15 Pro 256GB">
@@ -147,6 +147,8 @@
                     success: function(response) {
                         $(".ajax-modal").modal("hide");
                         swal("Success!", response.success, "success");
+                        table.draw();
+                        
                     },
                     error: function(error) {
                         if (error) {
@@ -160,22 +162,21 @@
                 });
             })
             //edit button click
-            $('body').on('click', '.editButton', function(){
+            $('body').on('click', '.editButton', function() {
                 var id = $(this).data('id');
-                
+
                 $.ajax({
                     url:"{{ url("products", '') }}" + '/' + id + '/edit',
                     type: "get",
                     data: {
                         id: id,
                     },
-                    success: function(response){
-                        table.draw(); 
+                    success: function(response) {
                         $(".ajax-modal").modal("show");
                         $('#modal-title').html('Edit Product');
                         $('#saveBtn').html('Update Product');
 
-                        $('#category_id').val(response.type);
+                        $('#product_id').val(response.id);
                         $('#name').val(response.name);
                         $('#type').val(response.type);
                         //console.log('type value:', response.type);
@@ -183,7 +184,7 @@
                         $('#price').val(response.price);
                         $('#stock').val(response.stock);
                     },
-                    error: function(error){
+                    error: function(error) {
                         console.log(error);
                     }
                 })
