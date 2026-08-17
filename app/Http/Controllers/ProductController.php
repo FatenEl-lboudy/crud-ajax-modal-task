@@ -97,4 +97,15 @@ class ProductController extends Controller
             'stock'    => $product->stock_qty,
         ]);
     }
+
+    public function destroy($id){
+        $product = Product::find($id);
+        if (!$product) {
+            abort(404);
+        }
+        $product->delete();
+        return response()->json([
+            'success' => 'Product deleted successfully.',
+        ], 200);
+    }
 }

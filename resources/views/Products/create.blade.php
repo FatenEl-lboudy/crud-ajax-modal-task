@@ -127,15 +127,16 @@
                 ]
             });
 
+            // Add new product (Clear Modal)
             $('body').on('click', '[data-target="#exampleModal"]', function() {
                 $('#ajaxForm')[0].reset(); // clears all input/select values
                 $('#product_id').val(''); // clear the hidden id
-                $('.error-messages').html(''); 
+                $('.error-messages').html('');
                 $('#modal-title').html('Create Product');
                 $('#saveBtn').html('Save Product');
             });
 
-
+            // Store / Update Product
             $('#saveBtn').click(function() {
                 $('.error-messages').html('');
 
@@ -151,9 +152,9 @@
                     },
                     data: formData,
                     success: function(response) {
-                        table.draw();
-                        $(".ajax-modal").modal("hide");
-                        swal("Success!", response.success, "success");
+                        table.draw(); // Update data table
+                        $(".ajax-modal").modal("hide"); // Hide modal
+                        swal("Success!", response.success, "success"); // Show success message
 
                     },
                     error: function(error) {
@@ -194,6 +195,36 @@
                         console.log(error);
                     }
                 })
+            });
+
+            // Delete Product
+            $('body').on('click', '.delButton', function() {
+                var id = $(this).data('id');
+                swal({
+                    title: "Are you sure?",
+                    text: "You want to delete this product",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                })
+                    .then((willDelete) => {
+                        if (willDelete) {
+                            $.ajax({
+                                url: "{{ url('products') }}" + '/' + id,
+                                type: "DELETE",
+                                data: {
+                                    id: id,
+                                },
+                                success: function(response) {
+                                    table.draw();
+                                    swal("Success!", response.success, "success");
+                                },
+                                error: function(error) {
+                                    console.log(error);
+                                }
+                            })
+                        }
+                    });
             });
         });
     </script>
