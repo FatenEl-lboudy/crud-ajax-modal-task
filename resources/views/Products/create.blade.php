@@ -29,7 +29,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <!-- hidden input to detect whether the request is create or update, value included-> update request -->
+                        <!-- hidden input to detect whether the request is create or update, value included=> update request -->
                         <input type="hidden" name="product_id" id="product_id">
                         <div class="form-group mb-3">
                             <label for="name">Name</label>
@@ -127,11 +127,17 @@
                 ]
             });
 
-            $('#modal-title').html('Create Product');
-            $('#saveBtn').html('Save Product');
+            $('body').on('click', '[data-target="#exampleModal"]', function() {
+                $('#ajaxForm')[0].reset(); // clears all input/select values
+                $('#product_id').val(''); // clear the hidden id
+                $('.error-messages').html(''); 
+                $('#modal-title').html('Create Product');
+                $('#saveBtn').html('Save Product');
+            });
+
 
             $('#saveBtn').click(function() {
-                $('.error-messages').html(''); // Clear all error messages
+                $('.error-messages').html('');
 
                 var formData = new FormData($('#ajaxForm')[0]); // Get form data
 
@@ -145,10 +151,10 @@
                     },
                     data: formData,
                     success: function(response) {
+                        table.draw();
                         $(".ajax-modal").modal("hide");
                         swal("Success!", response.success, "success");
-                        table.draw();
-                        
+
                     },
                     error: function(error) {
                         if (error) {
@@ -166,7 +172,7 @@
                 var id = $(this).data('id');
 
                 $.ajax({
-                    url:"{{ url("products", '') }}" + '/' + id + '/edit',
+                    url: "{{ url('products') }}" + '/' + id + '/edit',
                     type: "get",
                     data: {
                         id: id,
