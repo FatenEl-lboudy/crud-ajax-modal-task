@@ -8,4 +8,4 @@ Route::get('/products/create', [ProductController::class, 'create'])->name('prod
 Route::post('/products', [ProductController::class, 'store'])->name('products.store');
 Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
-
+Route::post('/products/multi-delete', [ProductController::class, 'multiDelete'])->name('products.multiDelete');

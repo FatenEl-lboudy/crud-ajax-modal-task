@@ -38,8 +38,8 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         if ($request->product_id) {
-        $product = Product::find($request->product_id);
-            if(! $product){
+            $product = Product::find($request->product_id);
+            if (! $product) {
                 abort(404);
             }
 
@@ -98,7 +98,8 @@ class ProductController extends Controller
         ]);
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         $product = Product::find($id);
         if (!$product) {
             abort(404);
@@ -106,6 +107,20 @@ class ProductController extends Controller
         $product->delete();
         return response()->json([
             'success' => 'Product deleted successfully.',
+        ], 200);
+    }
+
+    public function multiDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:products,id',
+        ]);
+
+        Product::whereIn('id', $request->ids)->delete();
+
+        return response()->json([
+            'success' => count($request->ids) . ' product(s) deleted successfully.',
         ], 200);
     }
 }

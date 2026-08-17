@@ -9,7 +9,8 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <title>Add Item</title>
@@ -17,7 +18,8 @@
 
 <body>
     <!-- Modal -->
-    <div class="modal fade ajax-modal" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade ajax-modal" id="exampleModal" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalLabel" aria-hidden="true">
         <form id="ajaxForm">
             @csrf
             <div class="modal-dialog" role="document">
@@ -33,14 +35,15 @@
                         <input type="hidden" name="product_id" id="product_id">
                         <div class="form-group mb-3">
                             <label for="name">Name</label>
-                            <input type="text" class="form-control" name="name" id="name" placeholder="iPhone 15 Pro 256GB">
+                            <input type="text" class="form-control" name="name" id="name"
+                                placeholder="iPhone 15 Pro 256GB">
                             <span id="nameError" class="text-danger error-messages"></span>
                         </div>
                         <div class="form-group mb-3">
                             <label for="type">Category</label>
                             <select class="form-control" name="type" id="type">
                                 <option disabled selected>Select a category</option>
-                                @foreach($categories as $category)
+                                @foreach ($categories as $category)
                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
@@ -48,7 +51,8 @@
                         </div>
                         <div class="form-group mb-3">
                             <label for="price">Price</label>
-                            <input type="text" class="form-control" name="price" id="price" placeholder="50000 EGP">
+                            <input type="text" class="form-control" name="price" id="price"
+                                placeholder="50000 EGP">
                             <span id="priceError" class="text-danger error-messages"></span>
                         </div>
                         <div class="form-group mb-1">
@@ -68,10 +72,12 @@
     <div class="row">
         <div class="col-md-6 offset-3" style="margin-top: 100px">
             <a class="btn btn-info mb-3" data-toggle="modal" data-target="#exampleModal">Add Item</a>
+            <button type="button" class="btn btn-danger mb-3" id="deleteSelectedBtn">Delete Selected</button>
             <table class="table" id="products-table">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
+                        <th scope="col"><input type="checkbox" id="selectAll"></th>
+                        <!-- <th scope="col">#</th> -->
                         <th scope="col">Name</th>
                         <th scope="col">Category</th>
                         <th scope="col">Price</th>
@@ -90,7 +96,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
     </script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js">
+    </script>
 
     <script>
         $(document).ready(function() {
@@ -100,7 +107,15 @@
                 ajax: '{{ route("products.index") }}',
                 columns: [{
                         data: 'id',
-                        name: 'id'
+                        name: 'id',
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row) {
+                            // checked="checked" if this id is already in selectedIds array
+                            var checked = selectedIds.includes(data) ? 'checked' : '';
+                            return '<input type="checkbox" class="rowCheckbox" value="' + data +
+                                '" ' + checked + '>';
+                        }
                     },
                     {
                         data: 'name',
@@ -136,6 +151,81 @@
                 $('#saveBtn').html('Save Product');
             });
 
+
+
+            //multi select 
+            var selectedIds = [];
+
+            // when a row checkbox is unchecked
+            $('#products-table').on('change', '.rowCheckbox', function() {
+                var id = parseInt($(this).val());
+                if (this.checked) {
+                    if (!selectedIds.includes(id)) selectedIds.push(id);
+                } else {
+                    selectedIds = selectedIds.filter(function(item) {
+                        return item !== id;
+                    });
+                }
+            });
+
+            // select-all checkbox — only affects the CURRENT page's visible rows
+            $('#selectAll').on('click', function() {
+                var isChecked = this.checked;
+                $('.rowCheckbox').each(function() {
+                    $(this).prop('checked', isChecked);
+                    var id = parseInt($(this).val());
+                    if (isChecked) {
+                        if (!selectedIds.includes(id)) selectedIds.push(id);
+                    } else {
+                        selectedIds = selectedIds.filter(function(item) {
+                            return item !== id;
+                        });
+                    }
+                });
+            });
+
+            // re-check boxes whenever DataTable redraws 
+            table.on('draw', function() {
+                $('#selectAll').prop('checked', false); // reset select-all master checkbox each page
+            });
+
+            $('#deleteSelectedBtn').on('click', function() {
+                if (selectedIds.length === 0) {
+                    swal("Oops!", "No products selected.", "warning");
+                    return;
+                }
+
+                swal({
+                    title: "Are you sure?",
+                    text: "This will permanently delete " + selectedIds.length + " product(s).",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                }).then((willDelete) => {
+                    if (willDelete) {
+                        $.ajax({
+                            url: "{{ route('products.multiDelete') }}",
+                            type: "POST",
+                            headers: {
+                                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            data: {
+                                ids: selectedIds
+                            },
+                            success: function(response) {
+                                swal("Deleted!", response.success, "success");
+                                selectedIds = []; // reset selection
+                                table.draw();
+                            },
+                            error: function(error) {
+                                console.log(error);
+                            }
+                        });
+                    }
+                });
+            });
+
+            
             // Store / Update Product
             $('#saveBtn').click(function() {
                 $('.error-messages').html('');
@@ -201,12 +291,12 @@
             $('body').on('click', '.delButton', function() {
                 var id = $(this).data('id');
                 swal({
-                    title: "Are you sure?",
-                    text: "You want to delete this product",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true,
-                })
+                        title: "Are you sure?",
+                        text: "You want to delete this product",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
                     .then((willDelete) => {
                         if (willDelete) {
                             $.ajax({
