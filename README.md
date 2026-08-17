@@ -1,4 +1,4 @@
-# A Laravel-based CRUD application built as part of the technical task.
+# A Laravel-based CRUD application built as part of a technical task.
 
 ## Features
 
@@ -19,7 +19,7 @@
 1. Clone the repo
 ```bash
    git clone <repo-url>
-   cd al-badr-smart-systems-task
+   cd crud-ajax-modal-task
 ```
 
 2. Install dependencies
@@ -47,4 +47,4 @@
 
 ## Notes
 
-Built to match the task requirements: AJAX-based CRUD with modals, multi-select delete, AJAX search, and a category tree view.
+Built to match task requirements: AJAX-based CRUD with modals, multi-select delete, AJAX search, and a category tree view.
