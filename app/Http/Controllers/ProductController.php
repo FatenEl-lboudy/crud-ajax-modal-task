@@ -6,11 +6,13 @@ use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Pagination\Paginator;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        // Paginator::useBootstrapFour();
         $products = Product::with('category')->latest();
 
         if ($request->filled('category_id')) {
@@ -21,23 +23,24 @@ class ProductController extends Controller
             $products->whereIn('category_id', $categoryIds);
         }
 
+        if ($request->filled('search')) {
+            $products->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $products = $products->paginate(10)->appends($request->query());
+
+
         // Check if the incoming request is an AJAX call (DataTables sends requests this way)
         if ($request->ajax()) {
-            // Pass the $products collection to Yajra DataTables to build the table
-            return DataTables::of($products)
-
-                //add a custom "actions" column that isn't a real DB column
-                ->addColumn('actions', function ($row) {
-                    return '<a href="javascript:void(0)" class="btn-sm btn btn-info editButton mr-1" data-id="' . $row->id . '">Edit</a>
-                <a href="javascript:void(0)" class="btn-sm btn btn-danger delButton" data-id="' . $row->id . '">Del</a>';
-                })
-                // tell DataTables NOT to escape the HTML in the "actions" column or it get rendered as plain text
-                ->rawColumns(['actions'])
-                ->make(true);
+            
+            return response()->json([
+            'table' => view('products.partials.table-body', compact('products'))->render(),
+            'pagination' => $products->links()->toHtml(),
+        ]);
         }
 
         $categories = Category::whereNull('parent_id')->with('children.children')->get();
-        return view('products.create', compact('categories'));
+        return view('products.create', compact('products', 'categories'));
     }
 
     // public function create()

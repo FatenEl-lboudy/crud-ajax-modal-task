@@ -11,7 +11,6 @@
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <title>Add Item</title>
 </head>
@@ -77,89 +76,77 @@
             @include('products.partials.category-tree', ['categories' => $categories])
         </div>
         <div class="col-md-6 ">
-                <a class="btn btn-info mb-3" data-toggle="modal" data-target="#exampleModal">Add Item</a>
-                <button type="button" class="btn btn-danger mb-3" id="deleteSelectedBtn">Delete Selected</button>
-                <table class="table" id="products-table">
-                    <thead>
-                        <tr>
-                            <th scope="col"><input type="checkbox" id="selectAll"></th>
-                            <!-- <th scope="col">#</th> -->
-                            <th scope="col">Name</th>
-                            <th scope="col">Category</th>
-                            <th scope="col">Price</th>
-                            <th scope="col">Stock</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <a class="btn btn-info mb-3" data-toggle="modal" data-target="#exampleModal">Add Item</a>
+            <button type="button" class="btn btn-danger mb-3" id="deleteSelectedBtn">Delete Selected</button>
+            <input type="text" id="searchInput" class="form-control mb-3" placeholder="Search products...">
+            <table class="table" id="products-table">
+                <thead>
+                    <tr>
+                        <th scope="col"><input type="checkbox" id="selectAll"></th>
+                        <!-- <th scope="col">#</th> -->
+                        <th scope="col">Name</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Stock</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                    @include('products.partials.table-body', compact('products'))
+                </tbody>
+            </table>
 
-                    </tbody>
-                </table>
+            <div id="paginationLinks">
+                {{ $products->links() }}
             </div>
         </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
-    </script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js">
     </script>
 
     <script>
         $(document).ready(function() {
             var selectedCategoryId = '';
 
+            function loadProducts(url) {
+                $.ajax({
+                    url: url || '{{ route("products.index") }}',
+                    type: 'GET',
+                    data: url ? {} : {
+                        category_id: selectedCategoryId,
+                        search: $('#searchInput').val()
+                    },
+                    success: function(response) {
+                        $('#productsTableBody').html(response.table);
+                        $('#paginationLinks').html(response.pagination);
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            }
+
+            // Search 
+            $('#searchInput').on('keyup', function() {
+                loadProducts();
+            });
+
+            //Category filter
             $('body').on('click', '.category-filter', function() {
                 selectedCategoryId = $(this).data('id');
                 $('.category-filter').removeClass('font-weight-bold text-primary');
                 $(this).addClass('font-weight-bold text-primary');
-                table.ajax.reload();
+                loadProducts();
             });
 
-            var table = $('#products-table').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: '{{ route("products.index") }}',
-                    data: function(d) {
-                        d.category_id = selectedCategoryId;
-                    }
-                },
-                columns: [{
-                        data: 'id',
-                        name: 'id',
-                        orderable: false,
-                        searchable: false,
-                        render: function(data, type, row) {
-                            // checked="checked" if this id is already in selectedIds array
-                            var checked = selectedIds.includes(data) ? 'checked' : '';
-                            return '<input type="checkbox" class="rowCheckbox" value="' + data +
-                                '" ' + checked + '>';
-                        }
-                    },
-                    {
-                        data: 'name',
-                        name: 'name'
-                    },
-                    {
-                        data: 'category.name',
-                        name: 'category.name'
-                    },
-                    {
-                        data: 'price',
-                        name: 'price'
-                    },
-                    {
-                        data: 'stock_qty',
-                        name: 'stock_qty'
-                    },
-                    {
-                        data: 'actions',
-                        name: 'actions',
-                        orderable: false,
-                        searchable: false
-                    },
-                ]
+            // Pagination
+            $('body').on('click', '#paginationLinks a', function(e) {
+                e.preventDefault();
+                var url = $(this).attr('href');
+                loadProducts(url);
             });
 
             // Add new product (Clear Modal)
@@ -170,8 +157,6 @@
                 $('#modal-title').html('Create Product');
                 $('#saveBtn').html('Save Product');
             });
-
-
 
             //multi select 
             var selectedIds = [];
@@ -204,11 +189,6 @@
                 });
             });
 
-            // re-check boxes whenever DataTable redraws 
-            table.on('draw', function() {
-                $('#selectAll').prop('checked', false); // reset select-all checkbox
-            });
-
             $('#deleteSelectedBtn').on('click', function() {
                 if (selectedIds.length === 0) {
                     swal("Oops!", "No products selected.", "warning");
@@ -235,7 +215,7 @@
                             success: function(response) {
                                 swal("Deleted!", response.success, "success");
                                 selectedIds = []; // reset selection
-                                table.draw();
+                                loadProducts();
                             },
                             error: function(error) {
                                 console.log(error);
@@ -262,10 +242,9 @@
                     },
                     data: formData,
                     success: function(response) {
-                        table.draw(); // Update data table
+                        loadProducts();
                         $(".ajax-modal").modal("hide"); // Hide modal
-                        swal("Success!", response.success, "success"); // Show success message
-
+                        swal("Success!", response.success, "success");
                     },
                     error: function(error) {
                         if (error) {
@@ -285,14 +264,10 @@
                 $.ajax({
                     url: "{{ url('products') }}" + '/' + id + '/edit',
                     type: "get",
-                    data: {
-                        id: id,
-                    },
                     success: function(response) {
                         $(".ajax-modal").modal("show");
                         $('#modal-title').html('Edit Product');
                         $('#saveBtn').html('Update Product');
-
                         $('#product_id').val(response.id);
                         $('#name').val(response.name);
                         $('#type').val(response.type);
