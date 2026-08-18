@@ -42,9 +42,7 @@
                             <label for="type">Category</label>
                             <select class="form-control" name="type" id="type">
                                 <option disabled selected>Select a category</option>
-                                @foreach ($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
+                                @include('products.partials.category-options', ['categories' => $categories])
                             </select>
                             <span id="typeError" class="text-danger error-messages"></span>
                         </div>
