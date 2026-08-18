@@ -11,7 +11,15 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $products = Product::with('category')->latest()->get();
+        $products = Product::with('category')->latest();
+
+        if ($request->filled('category_id')) {
+            $categoryIds = Category::where('id', $request->category_id)
+                ->orWhere('parent_id', $request->category_id)
+                ->pluck('id');
+
+            $products->whereIn('category_id', $categoryIds);
+        }
 
         // Check if the incoming request is an AJAX call (DataTables sends requests this way)
         if ($request->ajax()) {
@@ -27,13 +35,16 @@ class ProductController extends Controller
                 ->rawColumns(['actions'])
                 ->make(true);
         }
+
+        $categories = Category::whereNull('parent_id')->with('children.children')->get();
+        return view('products.create', compact('categories'));
     }
 
-    public function create()
-    {
-        $categories = Category::orderBy('name')->get();
-        return view('products.create', ['categories' => $categories]);
-    }
+    // public function create()
+    // {
+    //      $categories = Category::orderBy('name')->get();
+    //      return view('products.create', ['categories' => $categories]);
+    // }
 
     public function store(Request $request)
     {

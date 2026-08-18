@@ -69,29 +69,35 @@
             </div>
         </form>
     </div>
-    <div class="row">
-        <div class="col-md-6 offset-3" style="margin-top: 100px">
-            <a class="btn btn-info mb-3" data-toggle="modal" data-target="#exampleModal">Add Item</a>
-            <button type="button" class="btn btn-danger mb-3" id="deleteSelectedBtn">Delete Selected</button>
-            <table class="table" id="products-table">
-                <thead>
-                    <tr>
-                        <th scope="col"><input type="checkbox" id="selectAll"></th>
-                        <!-- <th scope="col">#</th> -->
-                        <th scope="col">Name</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">Stock</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <div class="row" style="margin-top: 60px;">
+        <!-- Side Panel -->
+        <div class="col-md-3">
+            <h6>Categories</h6>
+            <a href="javascript:void(0)" class="category-filter d-block mb-2" data-id="">All</a>
+            @include('products.partials.category-tree', ['categories' => $categories])
+        </div>
+        <div class="col-md-6 ">
+                <a class="btn btn-info mb-3" data-toggle="modal" data-target="#exampleModal">Add Item</a>
+                <button type="button" class="btn btn-danger mb-3" id="deleteSelectedBtn">Delete Selected</button>
+                <table class="table" id="products-table">
+                    <thead>
+                        <tr>
+                            <th scope="col"><input type="checkbox" id="selectAll"></th>
+                            <!-- <th scope="col">#</th> -->
+                            <th scope="col">Name</th>
+                            <th scope="col">Category</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Stock</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
 
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
@@ -101,10 +107,24 @@
 
     <script>
         $(document).ready(function() {
+            var selectedCategoryId = '';
+
+            $('body').on('click', '.category-filter', function() {
+                selectedCategoryId = $(this).data('id');
+                $('.category-filter').removeClass('font-weight-bold text-primary');
+                $(this).addClass('font-weight-bold text-primary');
+                table.ajax.reload();
+            });
+
             var table = $('#products-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: '{{ route("products.index") }}',
+                ajax: {
+                    url: '{{ route("products.index") }}',
+                    data: function(d) {
+                        d.category_id = selectedCategoryId;
+                    }
+                },
                 columns: [{
                         data: 'id',
                         name: 'id',
@@ -144,7 +164,7 @@
 
             // Add new product (Clear Modal)
             $('body').on('click', '[data-target="#exampleModal"]', function() {
-                $('#ajaxForm')[0].reset(); // clears all input/select values
+                $('#ajaxForm')[0].reset(); // clears all input values
                 $('#product_id').val(''); // clear the hidden id
                 $('.error-messages').html('');
                 $('#modal-title').html('Create Product');
@@ -168,7 +188,7 @@
                 }
             });
 
-            // select-all checkbox — only affects the CURRENT page's visible rows
+            // select-all checkbox — only affects the CURRENT page's rows
             $('#selectAll').on('click', function() {
                 var isChecked = this.checked;
                 $('.rowCheckbox').each(function() {
@@ -186,7 +206,7 @@
 
             // re-check boxes whenever DataTable redraws 
             table.on('draw', function() {
-                $('#selectAll').prop('checked', false); // reset select-all master checkbox each page
+                $('#selectAll').prop('checked', false); // reset select-all checkbox
             });
 
             $('#deleteSelectedBtn').on('click', function() {
@@ -225,7 +245,7 @@
                 });
             });
 
-            
+
             // Store / Update Product
             $('#saveBtn').click(function() {
                 $('.error-messages').html('');
